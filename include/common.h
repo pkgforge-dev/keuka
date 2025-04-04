@@ -24,9 +24,8 @@
 
 #define KEUKA_VERSION "1.0.6"
 
-#define _GNU_SOURCE
-#define NULL_DEVICE "/dev/null"
-#define NOT_FOUND -1
-#define NULL_BYTE 1
+#define _GNU_SOURCE  1
+#define NOT_FOUND   -1
+#define NUL_BYTE     1
 
 #endif /* KEUKA_COMMON_H */

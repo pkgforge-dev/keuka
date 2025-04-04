@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2017 Nickolas Burr <nickolasburr@gmail.com>
  */
+
 #ifndef KEUKA_EXCEPT_H
 #define KEUKA_EXCEPT_H
 
