@@ -14,9 +14,10 @@
 #include <arpa/inet.h>
 #include "common.h"
 #include "error.h"
+#include "mem.h"
 #include "ssl.h"
 #include "utils.h"
 
-int mksock(char *, BIO *);
+int mksock(const char *, BIO *);
 
 #endif /* KEUKA_SOCK_H */
