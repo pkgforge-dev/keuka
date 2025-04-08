@@ -44,12 +44,4 @@ int is_fifo(const char *);
 int is_block(const char *);
 int is_char(const char *);
 
-/**
- * Type utilities
- */
-
-int is_digit(int);
-int is_null(void *);
-int is_numeric(char *);
-
 #endif /* KEUKA_UTILS_H */
