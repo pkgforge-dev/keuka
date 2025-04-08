@@ -9,77 +9,103 @@
 /**
  * Create TCP socket.
  */
-int mksock (char *url, BIO *bp) {
-	int sockfd, port, status;
+int mksock(
+	const char *url,
+	BIO *bp
+) {
+	int buflen, lindex, sockfd;
+	int port, status;
+	char *buf = NULL;
 	char hostname[256] = "";
 	char port_num[6] = "443";
 	char protocol[6] = "";
 	char *tmp_ptr = NULL;
-	struct hostent *host;
+	struct hostent *host = NULL;
 	struct sockaddr_in dest_addr;
+
+	buflen = strlen(url);
+	buf = ALLOC(
+		sizeof(char) * (
+			buflen + NUL_BYTE
+		)
+	);
+	copy(buf, url);
 
 	/**
 	 * Remove trailing slash, if applicable.
 	 */
-	if (url[strlen(url)] == '/') {
-		url[strlen(url)] = '\0';
+	lindex = buflen - 1;
+
+	if (buf[lindex] == '/') {
+		buf[lindex] = '\0';
 	}
 
 	/**
-	 * Protocol type (e.g. https).
+	 * Protocol (e.g. https).
 	 */
-	strncpy(protocol, url, (strchr(url, ':') - url));
+	strncpy(
+		protocol,
+		buf,
+		(strchr(buf, ':') - buf)
+	);
 
 	/**
 	 * Hostname (e.g. www.example.com)
 	 */
-	strncpy(hostname, strstr(url, "://") + 3, sizeof(hostname));
+	strncpy(
+		hostname,
+		strstr(buf, "://") + 3,
+		sizeof(hostname)
+	);
 
 	/**
 	 * Port (if applicable).
 	 */
-	if (strchr(hostname, ':')) {
-		tmp_ptr = strchr(hostname, ':');
-		strncpy(port_num, tmp_ptr + NULL_BYTE,  sizeof(port_num));
+	tmp_ptr = strchr(hostname, ':');
+
+	if (tmp_ptr != NULL) {
+		strncpy(
+			port_num,
+			tmp_ptr + NUL_BYTE,
+			sizeof(port_num)
+		);
 		*tmp_ptr = '\0';
 	}
 
+	host = gethostbyname(hostname);
 	port = atoi(port_num);
 
 	/**
-	 * Verify the hostname is resolvable.
+	 * Verify hostname is resolvable.
 	 */
-	if (is_null(gethostbyname(hostname))) {
+	if (host == NULL) {
 		return -1;
 	}
 
-	host = gethostbyname(hostname);
-
-	/**
-	 * Set TCP socket.
-	 */
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	sockfd = socket(
+		AF_INET,
+		SOCK_STREAM,
+		0
+	);
 
 	dest_addr.sin_family = AF_INET;
 	dest_addr.sin_port = htons(port);
-	dest_addr.sin_addr.s_addr = *(long*)(host->h_addr);
+	dest_addr.sin_addr.s_addr = *(long *)(host->h_addr);
 
-	/**
-	 * Initialize the rest of the struct.
-	 */
-	memset(&(dest_addr.sin_zero), '\0', 8);
+	memset(
+		&(dest_addr.sin_zero),
+		'\0',
+		8
+	);
 	tmp_ptr = inet_ntoa(dest_addr.sin_addr);
 
 	status = connect(
 		sockfd,
-		(struct sockaddr*) &dest_addr,
+		(struct sockaddr *) &dest_addr,
 		sizeof(struct sockaddr)
 	);
 
-	/**
-	 * Return error if we're not able to connect.
-	 */
-	if (is_error(status, -1)) {
+	if (status == -1) {
 		BIO_printf(
 			bp,
 			"Error: Cannot connect to host %s [%s] on port %d.\n",

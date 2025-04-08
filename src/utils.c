@@ -46,26 +46,25 @@ char *copy (char *buf, char *str) {
  * GNU `dirname` polyfill.
  */
 char *dir_name (char *path) {
-	static const char *dot = ".";
 	char *pslash;
 
 	/**
 	 * Get trailing slash.
 	 */
-	pslash = !is_null(path)
+	pslash = path != NULL
 	       ? strrchr(path, '/')
 	       : NULL;
 
 	if (pslash == path) {
 		++pslash;
-	} else if (!is_null(pslash) && pslash[1] == '\0') {
+	} else if (pslash != NULL && pslash[1] == '\0') {
 		pslash = memchr(path, pslash - path, '/');
 	}
 
-	if (!is_null(pslash)) {
+	if (pslash != NULL) {
 		pslash[0] = '\0';
 	} else {
-		path = (char *) dot;
+		path = ".";
 	}
 
 	return path;
@@ -133,11 +132,12 @@ DIR *get_dir (int *error, const char *path) {
  * Get pointer to file by its pathname.
  */
 FILE *get_file (int *error, const char *filename, const char *filemode) {
-	FILE *fp = fopen(filename, filemode);
+	FILE *fp = NULL;
 
 	*error = 0;
+	fp = fopen(filename, filemode);
 
-	if (is_null(fp)) {
+	if (fp == NULL) {
 		*error = 1;
 	}
 
@@ -148,11 +148,12 @@ FILE *get_file (int *error, const char *filename, const char *filemode) {
  * Get pointer to pipe.
  */
 FILE *open_pipe (int *error, const char *command, const char *pipemode) {
-	FILE *fp = popen(command, pipemode);
+	FILE *fp = NULL;
 
 	*error = 0;
+	fp = popen(command, pipemode);
 
-	if (is_null(fp)) {
+	if (fp == NULL) {
 		*error = 1;
 	}
 
@@ -223,47 +224,4 @@ int is_writable (const char *path) {
 	}
 
 	return 0;
-}
-
-/**
- *
- * Type utilities
- *
- */
-
-/**
- * `isdigit` wrapper
- */
-int is_digit (int c) {
-	return isdigit(c);
-}
-
-/**
- * Determine if pointer is a null pointer.
- */
-int is_null (void *ptr) {
-	if (ptr == NULL) {
-		return 1;
-	}
-
-	return 0;
-}
-
-/**
- * Determine if string is numeric.
- */
-int is_numeric (char *str) {
-	int index;
-
-	index = 0;
-
-	while (str[index] != '\0') {
-		if (!is_digit(str[index])) {
-			return 0;
-		}
-
-		index++;
-	}
-
-	return 1;
 }
