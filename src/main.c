@@ -234,7 +234,10 @@ int main (int argc, char **argv) {
 	 * complain to stderr and exit.
 	 */
 	if (last_index < 1) {
-		fprintf(stderr, "Error: Hostname not specified.\n");
+		fprintf(
+			stderr,
+			"Error: Hostname not specified.\n"
+		);
 		exit(EXIT_FAILURE);
 	}
 
@@ -242,7 +245,11 @@ int main (int argc, char **argv) {
 	 * Limit length of hostname given as an argument.
 	 */
 	if (length(argv[last_index]) > MAX_HOSTNAME_LENGTH) {
-		fprintf(stderr, "Error: Hostname exceeds maximum length of 256 characters.\n");
+		fprintf(
+			stderr,
+			"Error: Hostname exceeds maximum length of %d characters.\n",
+			MAX_HOSTNAME_LENGTH
+		);
 		exit(EXIT_FAILURE);
 	}
 
@@ -267,19 +274,11 @@ int main (int argc, char **argv) {
 	OpenSSL_add_all_digests();
 	SSL_library_init();
 
-	/**
-	 * Start execution clock.
-	 */
 	start = clock();
-
-	/**
-	 * Initialize new BIO.
-	 */
-	bp = BIO_new_fp(stdout, BIO_NOCLOSE);
-
-	/**
-	 * Method for peer connection.
-	 */
+	bp = BIO_new_fp(
+		stdout,
+		BIO_NOCLOSE
+	);
 	ssl_method = SSLv23_client_method();
 
 	if (!quiet) {
@@ -291,15 +290,9 @@ int main (int argc, char **argv) {
 		);
 	}
 
-	/**
-	 * Establish new SSL context.
-	 */
 	ctx = SSL_CTX_new(ssl_method);
 
-	if (is_null(ctx)) {
-		/**
-		 * Display error in progress format, unless given --quiet.
-		 */
+	if (ctx == NULL) {
 		if (!quiet) {
 			BIO_printf(
 				bp,
@@ -308,7 +301,10 @@ int main (int argc, char **argv) {
 				get_elapsed_ticks(start)
 			);
 		} else {
-			BIO_printf(bp, "Error: Unable to establish SSL context.\n");
+			BIO_printf(
+				bp,
+				"Error: Unable to establish SSL context.\n"
+			);
 		}
 
 		goto on_error;
@@ -323,9 +319,6 @@ int main (int argc, char **argv) {
 		);
 	}
 
-	/**
-	 * Make TCP socket connection.
-	 */
 	server = mksock(url, bp);
 
 	if (!quiet) {
@@ -338,13 +331,7 @@ int main (int argc, char **argv) {
 		);
 	}
 
-	/**
-	 * Exit if there was an issue establishing a connection.
-	 */
-	if (is_error(server, -1)) {
-		/**
-		 * Display error in progress format, unless given --quiet.
-		 */
+	if (server == -1) {
 		if (!quiet) {
 			BIO_printf(
 				bp,
@@ -354,7 +341,11 @@ int main (int argc, char **argv) {
 				hostname
 			);
 		} else {
-			BIO_printf(bp, "Error: Unable to resolve hostname %s.\n", hostname);
+			BIO_printf(
+				bp,
+				"Error: Unable to resolve hostname %s.\n",
+				hostname
+			);
 		}
 
 		exit(EXIT_FAILURE);
@@ -369,9 +360,6 @@ int main (int argc, char **argv) {
 		);
 	}
 
-	/**
-	 * Establish connection, set state in client mode.
-	 */
 	ssl = SSL_new(ctx);
 	SSL_set_connect_state(ssl);
 
@@ -379,7 +367,10 @@ int main (int argc, char **argv) {
 	 * Disable SNI support if --no-sni was given.
 	 */
 	if (!no_sni) {
-		SSL_set_tlsext_host_name(ssl, hostname);
+		SSL_set_tlsext_host_name(
+			ssl,
+			hostname
+		);
 	}
 
 	if (!quiet) {
@@ -394,12 +385,9 @@ int main (int argc, char **argv) {
 	attach = SSL_set_fd(ssl, server);
 
 	/**
-	 * Attach the SSL session to the TCP socket.
+	 * Attach SSL session to TCP socket.
 	 */
-	if (is_error(attach, -1)) {
-		/**
-		 * Display error in progress format, unless given --quiet.
-		 */
+	if (attach == -1) {
 		if (!quiet) {
 			BIO_printf(
 				bp,
@@ -408,7 +396,10 @@ int main (int argc, char **argv) {
 				get_elapsed_ticks(start)
 			);
 		} else {
-			BIO_printf(bp, "Error: Unable to attach SSL session to socket.\n");
+			BIO_printf(
+				bp,
+				"Error: Unable to attach SSL session to socket.\n"
+			);
 		}
 
 		goto on_error;
@@ -425,13 +416,7 @@ int main (int argc, char **argv) {
 
 	status = SSL_connect(ssl);
 
-	/**
-	 * Bridge the connection.
-	 */
 	if (status != 1) {
-		/**
-		 * Display error in progress format, unless given --quiet.
-		 */
 		if (!quiet) {
 			BIO_printf(
 				bp,
@@ -467,9 +452,6 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	/**
-	 * Print cipher used if --cipher was given.
-	 */
 	if (cipher) {
 		BIO_printf(
 			bp,
@@ -490,16 +472,10 @@ int main (int argc, char **argv) {
 		);
 	}
 
-	/**
-	 * Print full chain if --chain was given.
-	 */
 	if (chain) {
-		/**
-		 * Get peer certificate chain.
-		 */
 		fullchain = SSL_get_peer_cert_chain(ssl);
 
-		if (is_null(fullchain)) {
+		if (fullchain == NULL) {
 			BIO_printf(
 				bp,
 				"Error: Could not get certificate chain from %s.\n",
@@ -519,7 +495,10 @@ int main (int argc, char **argv) {
 			crt_index += 1
 		) {
 			pad_tfmt = 0;
-			tcrt = sk_X509_value(fullchain, crt_index);
+			tcrt = sk_X509_value(
+				fullchain,
+				crt_index
+			);
 			tcrtname = X509_get_subject_name(tcrt);
 			tpubkey = X509_get_pubkey(tcrt);
 
@@ -605,17 +584,27 @@ int main (int argc, char **argv) {
 				}
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-				X509_get0_signature(&asn1_sig, &sig_type, tcrt);
+				X509_get0_signature(
+					&asn1_sig,
+					&sig_type,
+					tcrt
+				);
 #else
 				sig_type = tcrt->sig_alg;
 				asn1_sig = tcrt->signature;
 #endif
 
 				BIO_printf(bp, "--- Signature Algorithm: ");
-				sig_type_err = i2a_ASN1_OBJECT(bp, sig_type->algorithm);
+				sig_type_err = i2a_ASN1_OBJECT(
+					bp,
+					sig_type->algorithm
+				);
 
-				if (is_error(sig_type_err, -1) || is_error(sig_type_err, 0)) {
-					BIO_printf(bp, "Could not get signature algorithm.");
+				if (sig_type_err <= 0) {
+					BIO_printf(
+						bp,
+						"Could not get signature algorithm."
+					);
 				}
 			}
 
@@ -630,12 +619,27 @@ int main (int argc, char **argv) {
 					pad_tfmt = 1;
 				}
 
-				BIO_printf(bp, "--- Validity:\n");
-				BIO_printf(bp, "%11s%s", "", "--- Not Before: ");
-				ASN1_TIME_print(bp, X509_get_notBefore(tcrt));
-				BIO_printf(bp, "\n");
-				BIO_printf(bp, "%11s%s", "", "--- Not After: ");
-				ASN1_TIME_print(bp, X509_get_notAfter(tcrt));
+				BIO_printf(
+					bp,
+					"%s\n%11s%s",
+					"--- Validity:",
+					"",
+					"--- Not Before: "
+				);
+				ASN1_TIME_print(
+					bp,
+					X509_get_notBefore(tcrt)
+				);
+				BIO_printf(
+					bp,
+					"\n%11s%s",
+					"",
+					"--- Not After: "
+				);
+				ASN1_TIME_print(
+					bp,
+					X509_get_notAfter(tcrt)
+				);
 			}
 
 			if (!pad_tfmt) {
@@ -666,12 +670,9 @@ int main (int argc, char **argv) {
 			}
 		}
 	} else {
-		/**
-		 * Get peer certificate.
-		 */
 		crt = SSL_get_peer_certificate(ssl);
 
-		if (is_null(crt)) {
+		if (crt == NULL) {
 			BIO_printf(
 				bp,
 				"Error: Could not get certificate from %s.\n",
@@ -737,18 +738,28 @@ int main (int argc, char **argv) {
 		 */
 		if (sig_algo) {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-			X509_get0_signature(&asn1_sig, &sig_type, crt);
+			X509_get0_signature(
+				&asn1_sig,
+				&sig_type,
+				crt
+			);
 #else
 			sig_type = crt->sig_alg;
 			asn1_sig = crt->signature;
 #endif
 
 			BIO_printf(bp, "--- Signature Algorithm: ");
-			sig_type_err = i2a_ASN1_OBJECT(bp, sig_type->algorithm);
+			sig_type_err = i2a_ASN1_OBJECT(
+				bp,
+				sig_type->algorithm
+			);
 			BIO_printf(bp, "\n");
 
-			if (is_error(sig_type_err, -1) || is_error(sig_type_err, 0)) {
-				BIO_printf(bp, "Error: Could not get signature algorithm.\n");
+			if (sig_type_err <= 0) {
+				BIO_printf(
+					bp,
+					"Error: Could not get signature algorithm.\n"
+				);
 			}
 		}
 
@@ -757,12 +768,27 @@ int main (int argc, char **argv) {
 		 * range of Not Before/Not After timestamps.
 		 */
 		if (validity) {
-			BIO_printf(bp, "%s", "--- Validity:\n");
-			BIO_printf(bp, "%4s%s", "", "--- Not Before: ");
-			ASN1_TIME_print(bp, X509_get_notBefore(crt));
-			BIO_printf(bp, "\n");
-			BIO_printf(bp, "%4s%s", "", "--- Not After: ");
-			ASN1_TIME_print(bp, X509_get_notAfter(crt));
+			BIO_printf(
+				bp,
+				"%s\n%4s%s",
+				"--- Validity:",
+				"",
+				"--- Not Before: "
+			);
+			ASN1_TIME_print(
+				bp,
+				X509_get_notBefore(crt)
+			);
+			BIO_printf(
+				bp,
+				"\n%4s%s",
+				"",
+				"--- Not After: "
+			);
+			ASN1_TIME_print(
+				bp,
+				X509_get_notAfter(crt)
+			);
 			BIO_printf(bp, "\n");
 		}
 
